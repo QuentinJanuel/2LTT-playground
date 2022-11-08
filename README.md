@@ -1,1 +1,3 @@
-# Webpack template
+# 2LTT Playground
+
+WIP
