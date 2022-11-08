@@ -1,0 +1,106 @@
+use crate::term::Term;
+use crate::stage::Stage;
+
+grammar;
+
+pub Term: Term = {
+    Abs => <>,
+}
+
+Abs: Term = {
+    // (a: ty) => b
+    LPAR <a:IDENT> COLON <ty:Term> RPAR FAT_ARROW <b:Abs> => Term::Abs(
+        a.to_string(),
+        Box::new(ty),
+        Box::new(b),
+    ),
+    Arr => <>,
+}
+
+Arr: Term = {
+    // (x: a) -> b
+    LPAR <x:IDENT> COLON <a:Term> RPAR ARROW <b:Arr> => Term::Prod(
+        x.to_string(),
+        Box::new(a),
+        Box::new(b),
+    ),
+    Let => <>,
+}
+
+Let: Term = {
+    // let a: A = b in c
+    LET <a:IDENT> COLON <ty:Term> EQ <b:Term> IN <c:Term> => Term::Let(
+        Stage::S0,
+        a.to_string(),
+        Box::new(ty),
+        Box::new(b),
+        Box::new(c),
+    ),
+    // comp_let a: A = b in c
+    COMP_LET <a:IDENT> COLON <ty:Term> EQ <b:Term> IN <c:Term> => Term::Let(
+        Stage::S1,
+        a.to_string(),
+        Box::new(ty),
+        Box::new(b),
+        Box::new(c),
+    ),
+    Op => <>,
+}
+
+Op: Term = {
+    LT <Term> GT => Term::Quote(Box::new(<>)),
+    TILD <Term> => Term::Splice(Box::new(<>)),
+    UP_ARROW <Term> => Term::Lift(Box::new(<>)),
+    App => <>,
+}
+
+App: Term = {
+    // a b
+    <a:App> <b:Atom> => Term::App(
+        Box::new(a),
+        Box::new(b),
+    ),
+    Atom => <>,
+}
+
+Atom: Term = {
+    IDENT => Term::Var(<>.to_string()),
+    ZERO0 => Term::Zero(Stage::S0),
+    ZERO1 => Term::Zero(Stage::S1),
+    SUCC0 => Term::Succ(Stage::S0),
+    SUCC1 => Term::Succ(Stage::S1),
+    NAT0 => Term::Nat(Stage::S0),
+    NAT1 => Term::Nat(Stage::S1),
+    U0 => Term::U(Stage::S0),
+    U1 => Term::U(Stage::S1),
+    LPAR <Term> RPAR => <>,
+}
+
+match {
+    "->" => ARROW,
+    "=>" => FAT_ARROW,
+    "(" => LPAR,
+    ")" => RPAR,
+    "<" => LT,
+    ">" => GT,
+    "~" => TILD,
+    "let" => LET,
+    "comp_let" => COMP_LET,
+    "in" => IN,
+    ":" => COLON,
+    "=" => EQ,
+    "zero0" => ZERO0,
+    "zero1" => ZERO1,
+    "succ0" => SUCC0,
+    "succ1" => SUCC1,
+    "Nat0" => NAT0,
+    "Nat1" => NAT1,
+    "U0" => U0,
+    "U1" => U1,
+    "^" => UP_ARROW,
+    r"([[:alpha:]]|_)([[:alpha:]]|_|[[:digit:]])*" => IDENT,
+    // Comments
+    r"\s*" => {}, // Ignore white spaces
+    r"//[^\n\r]*[\n\r]*" => {}, // Skip "// comments"
+    r"/\*([^\*]*\*+[^\*/])*([^\*]*\*+|[^\*])*\*/" => {}, // Skip "/* comments */"
+}
