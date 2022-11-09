@@ -37,4 +37,4 @@ npm run build
 - Zakaria Djebbes
 
 ## License
-[MIT](LICENCE)
+[MIT](LICENSE)
