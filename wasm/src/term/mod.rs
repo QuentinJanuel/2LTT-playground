@@ -126,7 +126,7 @@ impl Display for Term {
             Self::Let(s, n, ty, a, b) => write!(
                 f,
                 "{} {n}: {ty} = {a} in {b}",
-                if s == &Stage::S0 { "let" } else { "comp_let" },
+                if s == &Stage::S0 { "let" } else { "const" },
             ),
             Self::Lift(t) => write!(f, "⇑{t}"),
             Self::Quote(t) => write!(f, "<{t}>"),

@@ -36,8 +36,8 @@ Let: Term = {
         Box::new(b),
         Box::new(c),
     ),
-    // comp_let a: A = b in c
-    COMP_LET <a:IDENT> COLON <ty:Term> EQ <b:Term> IN <c:Term> => Term::Let(
+    // const a: A = b in c
+    CONST <a:IDENT> COLON <ty:Term> EQ <b:Term> IN <c:Term> => Term::Let(
         Stage::S1,
         a.to_string(),
         Box::new(ty),
@@ -85,7 +85,7 @@ match {
     ">" => GT,
     "~" => TILD,
     "let" => LET,
-    "comp_let" => COMP_LET,
+    "const" => CONST,
     "in" => IN,
     ":" => COLON,
     "=" => EQ,

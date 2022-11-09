@@ -7,9 +7,9 @@ import styles from "./index.module.scss";
 
 export const App = function () {
 	const [input, setInput] = useState(
-`comp_let a: Nat1 = zero1 in
+`const a: Nat1 = zero1 in
 let b: Nat0 = zero0 in
-comp_let c: Nat0 = zero0 in
+const c: Nat0 = zero0 in
 let d: Nat0 = zero0 in
 b`
 	);

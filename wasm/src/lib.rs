@@ -30,22 +30,3 @@ pub fn stage(input: &str) -> String {
     let t = t.stage();
     format!("{t}")
 }
-// let input = "
-//     let a: Nat0 =
-//         comp_let id: (_: Nat0) -> Nat0 = (x: Nat0) => x in
-//         comp_let b: Nat0 = zero0 in
-//         id b
-//     in
-//     a
-// ";
-// let input = "
-//     comp_let a: Nat1 = zero1 in
-//     let b: Nat0 = zero0 in
-//     comp_let c: Nat0 = zero0 in
-//     let d: Nat0 = zero0 in
-//     b
-// ";
-// let input = "
-//     comp_let id: (A: U0) -> (_: ^A) -> ^A = (A: U0) => (x: ^A) => x in
-//     id Nat0 zero0
-// ";
