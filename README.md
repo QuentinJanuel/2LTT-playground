@@ -31,3 +31,10 @@ or build it:
 ```bash
 npm run build
 ```
+
+## Authors
+- Quentin Januel
+- Zakaria Djebbes
+
+## License
+[MIT](LICENSE)
