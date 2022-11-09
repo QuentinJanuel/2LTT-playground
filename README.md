@@ -1,5 +1,8 @@
 # 2LTT Playground
 
+## Introduction
+This is a playground for our implementation of the 2LTT formal system. It is based on the [2LTT paper](https://andraskovacs.github.io/pdfs/2ltt.pdf).
+
 ## Prerequisites
 - [Node.js](https://nodejs.org/en/)
 - [npm](https://www.npmjs.com/)
