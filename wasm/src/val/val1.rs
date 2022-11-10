@@ -1,7 +1,13 @@
 use super::{Val, Val0};
 use crate::env::Env;
 use crate::term::Term;
+use std::ops::Deref;
 use std::rc::Rc;
+use std::fmt::{
+    Debug,
+    Formatter,
+    Result as FmtResult,
+};
 
 #[derive(Clone)]
 pub enum Val1 {
@@ -18,7 +24,7 @@ pub enum Val1 {
 }
 
 impl Val1 {
-    pub fn var(env: &Env<Val>, name: &str) -> Self {
+    fn var(env: &Env<Val>, name: &str) -> Self {
         let v = env
             .get(name)
             .expect(&format!("Unknown meta variable {name}"));
@@ -27,10 +33,22 @@ impl Val1 {
             _ => panic!("{} is not a meta variable", name),
         }
     }
-    pub fn app(a: Self, b: Self) -> Self {
+    fn app(a: Self, b: Self) -> Self {
         match a {
             Self::Abs(a) => a(b),
             _ => panic!("Cannot apply a non function"),
+        }
+    }
+    fn nat_elim(z: Self, s: Self, t: Self) -> Self {
+        match t {
+            Self::Zero => z,
+            Self::Succ(t) => {
+                Self::app(
+                    s.clone(),
+                    Self::nat_elim(z, s, t.deref().clone()),
+                )
+            },
+            _ => panic!("Cannot eliminate a non natural number"),
         }
     }
     pub fn eval(env: &Env<Val>, term: &Term) -> Self {
@@ -57,6 +75,18 @@ impl Val1 {
             Term::Nat(_) => Self::Any,
             Term::Zero(_) => Self::Zero,
             Term::Succ(_) => Self::Abs(Rc::new(|v: Self| Self::Succ(Box::new(v)))),
+            Term::NatElim(_) => {
+                Self::Abs(Rc::new(|_: Self| {
+                    Self::Abs(Rc::new(|z: Self| {
+                        Self::Abs(Rc::new(move |s: Self| {
+                            let z = z.clone();
+                            Self::Abs(Rc::new(move |t: Self| {
+                                Self::nat_elim(z.clone(), s.clone(), t)
+                            }))
+                        }))
+                    }))
+                }))
+            },
             Term::Splice(_) => panic!("Cannot evaluate a splice as a meta value"),
         }
     }
@@ -64,5 +94,17 @@ impl Val1 {
         let val = Val::Val1(v);
         let env = env.insert(name, val);
         Self::eval(&env, term)
+    }
+}
+
+impl Debug for Val1 {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        match self {
+            Self::Abs(_) => write!(f, "abs"),
+            Self::Quote(v) => write!(f, "<{v:?}>"),
+            Self::Any => write!(f, "any"),
+            Self::Zero => write!(f, "zero1"),
+            Self::Succ(v) => write!(f, "(succ1 {v:?})"),
+        }
     }
 }

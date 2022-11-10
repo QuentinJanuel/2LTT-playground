@@ -3,6 +3,11 @@ use crate::env::Env;
 use crate::stage::Stage;
 use crate::term::Term;
 use std::rc::Rc;
+use std::fmt::{
+    Debug,
+    Formatter,
+    Result as FmtResult,
+};
 
 #[derive(Clone)]
 pub enum Val0 {
@@ -15,10 +20,11 @@ pub enum Val0 {
     Nat,
     Zero,
     Succ,
+    NatElim,
 }
 
 impl Val0 {
-    pub fn var(env: &Env<Val>, name: &str) -> Self {
+    fn var(env: &Env<Val>, name: &str) -> Self {
         let v = env
             .get(name)
             .expect(&format!("Unknown object variable {name}"));
@@ -27,10 +33,13 @@ impl Val0 {
             _ => panic!("{} is not an object variable", name),
         }
     }
-    pub fn splice(v: Val1) -> Self {
+    fn splice(v: Val1) -> Self {
         match v {
             Val1::Quote(v) => v,
-            _ => panic!("Cannot splice a non quote"),
+            _ => {
+                println!("Attempted to splice {v:?}");
+                panic!("Cannot splice a non quote");
+            },
         }
     }
     pub fn eval(env: &Env<Val>, term: &Term) -> Self {
@@ -73,11 +82,12 @@ impl Val0 {
             Term::Nat(_) => Self::Nat,
             Term::Zero(_) => Self::Zero,
             Term::Succ(_) => Self::Succ,
+            Term::NatElim(_) => Self::NatElim,
             Term::Quote(_) => unreachable!(),
             Term::Lift(_) => unreachable!(),
         }
     }
-    pub fn eval_bind(env: &Env<Val>, term: &Term, name: &str, v: Self) -> Self {
+    fn eval_bind(env: &Env<Val>, term: &Term, name: &str, v: Self) -> Self {
         let val = Val::Val0(v);
         let env = env.insert(name, val);
         Self::eval(&env, term)
@@ -107,6 +117,24 @@ impl Val0 {
             Self::Nat => Term::Nat(Stage::S0),
             Self::Zero => Term::Zero(Stage::S0),
             Self::Succ => Term::Succ(Stage::S0),
+            Self::NatElim => Term::NatElim(Stage::S0),
+        }
+    }
+}
+
+impl Debug for Val0 {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        match self {
+            Self::Var(name) => write!(f, "{name}"),
+            Self::App(a, b) => write!(f, "({a:?} {b:?})"),
+            Self::Pi(name, a, _) => write!(f, "({name} : {a:?}) -> ..."),
+            Self::Abs(name, a, _) => write!(f, "({name} : {a:?}) => ..."),
+            Self::Let(name, a, b, _) => write!(f, "let0 {name} : {a:?} = {b:?} in ..."),
+            Self::U => write!(f, "U0"),
+            Self::Nat => write!(f, "Nat0"),
+            Self::Zero => write!(f, "zero0"),
+            Self::Succ => write!(f, "succ0"),
+            Self::NatElim => write!(f, "nat_elim0"),
         }
     }
 }

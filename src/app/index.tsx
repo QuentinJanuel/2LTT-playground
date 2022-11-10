@@ -7,11 +7,22 @@ import styles from "./index.module.scss";
 
 export const App = function () {
 	const [input, setInput] = useState(
-`const a: Nat1 = zero1 in
-let b: Nat0 = zero0 in
-const c: Nat0 = zero0 in
-let d: Nat0 = zero0 in
-b`
+`const nat1_to_nat0
+: (_: Nat1) -> Nat0 =
+nat_elim1 (^Nat0) zero0 ((m: ^Nat0) => <succ0 m>)
+in
+
+const add1
+: (_: Nat1) -> (_: Nat1) -> Nat1
+= (a: Nat1) => nat_elim1 Nat1 a succ1
+in
+
+const a: Nat1 = succ1 (succ1 zero1) in
+const b: Nat1 = succ1 zero1 in
+
+let c: Nat0 = ~(nat1_to_nat0 (add1 a b)) in
+c
+`
 	);
 	const [err, setErr] = useState(false);
 	const [output, setOutput] = useState("Output goes here...");
@@ -34,8 +45,8 @@ b`
 							const e = elab(input);
 							setOutput(e);
 							setErr(false);
-						} catch {
-							setOutput("Errored");
+						} catch (err) {
+							setOutput(`${ err }`);
 							setErr(true);
 						}
 					} }>Elaborate</button>
@@ -44,8 +55,8 @@ b`
 							const e = stage(input);
 							setOutput(e);
 							setErr(false);
-						} catch {
-							setOutput("Errored");
+						} catch (err) {
+							setOutput(`${ err }`);
 							setErr(true);
 						}
 					} }>Stage</button>

@@ -34,6 +34,7 @@ pub enum Term {
     Nat(Stage),
     Zero(Stage),
     Succ(Stage),
+    NatElim(Stage),
 }
 
 impl Term {
@@ -98,7 +99,8 @@ impl Term {
             Self::U(s)
             | Self::Nat(s)
             | Self::Zero(s)
-            | Self::Succ(s) => {
+            | Self::Succ(s)
+            | Self::NatElim(s) => {
                 if target != s { self.fix(target, as_type) }
             }
         }
@@ -106,6 +108,23 @@ impl Term {
     pub fn elab(mut self) -> Self {
         self.elab_with(&Env::new(), &Stage::S0, false);
         self
+    }
+    fn get_nat(&self) -> Option<u32> {
+        match self {
+            Term::App(a, b) => {
+                match a.as_ref() {
+                    Term::Succ(_) => b.get_nat().map(|b| b + 1),
+                    _ => None
+                }
+            }
+            Term::Zero(_) => Some(0),
+            _ => None,
+        }
+    }
+    fn get_nat_str(&self, s: &Stage) -> Option<String> {
+        self.get_nat().map(|n| {
+            format!("{}{}", n, s.get_str())
+        })
     }
 }
 
@@ -120,8 +139,13 @@ impl Display for Term {
         match self {
             Self::Var(x) => write!(f, "{}", x),
             Self::Abs(n, ty, body) => write!(f, "(({n}: {ty}) => {body})"),
-            Self::App(a, b) => write!(f, "{a}({b})"),
-            Self::U(s) => write!(f, "U{}", s.get()),
+            Self::App(a, b) => {
+                match a.as_ref() {
+                    Term::Succ(s) => write!(f, "{}", self.get_nat_str(s).unwrap_or(format!("{a} {b}"))),
+                    _ => write!(f, "{a} {b}"),
+                }
+            },
+            Self::U(s) => write!(f, "U{}", s.get_str()),
             Self::Prod(n, a, b) => write!(f, "({n}: {a}) -> {b}"),
             Self::Let(s, n, ty, a, b) => write!(
                 f,
@@ -131,9 +155,10 @@ impl Display for Term {
             Self::Lift(t) => write!(f, "⇑{t}"),
             Self::Quote(t) => write!(f, "<{t}>"),
             Self::Splice(t) => write!(f, "~({t})"),
-            Self::Nat(s) => write!(f, "Nat{}", s.get()),
-            Self::Zero(s) => write!(f, "zero{}", s.get()),
-            Self::Succ(s) => write!(f, "succ{}", s.get()),
+            Self::Nat(s) => write!(f, "Nat{}", s.get_str()),
+            Self::Zero(s) => write!(f, "{}", self.get_nat_str(s).unwrap()),
+            Self::Succ(s) => write!(f, "succ{}", s.get_str()),
+            Self::NatElim(s) => write!(f, "nat_elim{}", s.get_str()),
         }
     }
 }
